@@ -11,6 +11,8 @@
 
 @interface WebPImageView : UIView
 
+typedef void (^WebPAnimationFinished)(NSInteger);
+
 /**
  Set the image to display.
  */
@@ -30,5 +32,15 @@ fetch the image from disk or remotely.
  inset the loading view in the view.
  */
 @property(nonatomic)UIEdgeInsets loadingInset;
+
+/**
+ how many times should animation images repeat? Default is 0 which means keep looping forever.
+ */
+@property(nonatomic)NSInteger loopCount;
+
+/**
+ notifieds when an animation has finished a loop.
+ */
+@property(nonatomic, strong)WebPAnimationFinished didFinishAnimation;
 
 @end

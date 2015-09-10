@@ -17,6 +17,8 @@
 @property(nonatomic)BOOL animated;
 @property(nonatomic)BOOL isClear;
 @property(nonatomic)NSInteger urlSessionId;
+@property(nonatomic)NSInteger iterationCount; //how times has the animation looped
+@property(nonatomic)BOOL moveIndex;
 
 @end
 
@@ -26,6 +28,7 @@
     if(self = [super initWithFrame:frame]) {
         self.backgroundColor = [UIColor clearColor];
         self.aspectScale = 1;
+        self.loopCount = 0;
     }
     return self;
 }
@@ -86,6 +89,7 @@
     self.animated = NO;
     self.prevImg = nil;
     self.index = 0;
+    self.iterationCount = 0;
     [self setNeedsLayout];
     if(self.image.frames.count > 1) {
         self.animated = YES;
@@ -108,11 +112,19 @@
             self.prevImg = img;
         }
         
-        self.index++;
         if(self.index >= self.image.frames.count) {
             self.index = 0;
+            self.prevImg = nil;
+            self.iterationCount++;
+            if(self.didFinishAnimation) {
+                self.didFinishAnimation(self.iterationCount);
+            }
+            if(self.iterationCount >= self.loopCount && self.loopCount > 0) {
+                return;
+            }
         }
         [self setNeedsDisplay];
+        self.moveIndex = YES;
         [self doAnimation:self.image.frames[self.index]];
     });
 }
@@ -184,6 +196,10 @@
         }
     }
     [frame.image drawInRect:imgFrame];
+    if(self.moveIndex) {
+        self.index++;
+        self.moveIndex = NO;
+    }
 }
 
 @end

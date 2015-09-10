@@ -84,6 +84,7 @@ static void free_image_data(void *info, const void *data, size_t size) {
                 UIImage *image = [self createImage:frame.bytes size:frame.size config:&config scale:scale];
                 if(image) {
                     NSInteger duration = iter.duration;
+                    NSLog(@"duration: %d",iter.duration);
                     if(duration <= 0) {
                         duration = 100;
                     }
