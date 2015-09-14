@@ -137,8 +137,12 @@
     CGFloat width = self.image.size.width;
     CGFloat height = self.image.size.height;
     if(width > 0 && height > 0) {
-        if(width > self.bounds.size.width || height > self.bounds.size.height) {
-            if(width > height && width > self.bounds.size.width) {
+        BOOL isGreaterWidth = (width > self.bounds.size.width);
+        BOOL isGreaterHeight = (height > self.bounds.size.height);
+        if(isGreaterWidth || isGreaterHeight) {
+            CGFloat hScale = height/self.bounds.size.height;
+            CGFloat wScale = width/self.bounds.size.width;
+            if(wScale > hScale && isGreaterWidth) {
                 height = (height/width)*self.bounds.size.width;
                 width = self.bounds.size.width;
                 self.aspectScale = self.image.size.width/width;
