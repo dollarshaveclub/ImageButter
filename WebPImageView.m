@@ -166,6 +166,13 @@
     }
 }
 
+- (void)setAspectScale:(CGFloat)aspectScale {
+    if(_aspectScale != aspectScale && !self.animated) {
+        [self setNeedsDisplay];
+    }
+    _aspectScale = aspectScale;
+}
+
 - (void)drawRect:(CGRect)rect {
     if(self.image.frames.count == 0) {
         return; //nothing to draw so don't even try
