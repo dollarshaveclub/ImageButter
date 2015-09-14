@@ -44,6 +44,18 @@ static void free_image_data(void *info, const void *data, size_t size) {
     return self;
 }
 
+- (instancetype)initWithImage:(UIImage*)img {
+    if(self = [super init]) {
+        _isDecoded = YES;
+        _size = img.size;
+        _frames = @[[[WebPFrame alloc] initWithFrame:
+                    CGRectMake(0, 0, img.size.width, img.size.height)
+                    image:img dispose:YES blend:NO duration:0]];
+        _backgroundColor = [UIColor clearColor];
+    }
+    return self;
+}
+
 - (void)decode:(NSData*)data {
     NSMutableArray *collect = [NSMutableArray array];
     WebPData webpData;
@@ -84,7 +96,6 @@ static void free_image_data(void *info, const void *data, size_t size) {
                 UIImage *image = [self createImage:frame.bytes size:frame.size config:&config scale:scale];
                 if(image) {
                     NSInteger duration = iter.duration;
-                    NSLog(@"duration: %d",iter.duration);
                     if(duration <= 0) {
                         duration = 100;
                     }

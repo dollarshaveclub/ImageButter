@@ -50,6 +50,12 @@ typedef void (^WebPDecodeProgress)(CGFloat);
 - (instancetype)initWithData:(NSData*)data;
 
 /**
+ Create a new WebPImage object with the a UIImage. This is hack so you can use a UIImage in a WebPImageView.
+ @param image to "convert" to webp.
+ */
+- (instancetype)initWithImage:(UIImage*)img;
+
+/**
  Create a new WebPImage object with data. The decoding is done on a background thread with this decode.
  @param data is the webp data to decode.
  @param async is triggered once the image is done decoding. nil can be passed.
