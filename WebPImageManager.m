@@ -176,6 +176,10 @@ typedef void (^WebPDataFinished)(NSData*);
     [self.cache removeAllObjects];
 }
 
+- (void)clearUrlFromCache:(NSURL*)url {
+    [self.cache removeObjectForKey:[self hashForUrl:url]];
+}
+
 - (void)cleanDisk {
     NSInteger age = -self.maxCacheAge;
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT,0),^{

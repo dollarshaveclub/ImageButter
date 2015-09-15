@@ -45,6 +45,11 @@ The time to cache an image on disk. The default is 24 hours.
 - (void)clearCache;
 
 /**
+ Clears the in memory cache for a specific url.
+ */
+- (void)clearUrlFromCache:(NSURL*)url;
+
+/**
  Cleans the cache directory of old files. 
  This runs on a background thread, so it is recommend to run on each launch of your app.
  */
