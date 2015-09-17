@@ -19,7 +19,7 @@
 #define   DEGREES_TO_RADIANS(degrees)  ((pi * degrees)/ 180)
 
 - (instancetype)initWithFrame:(CGRect)frame {
-    if(self = [super initWithFrame:frame]) {
+    if (self = [super initWithFrame:frame]) {
         self.shapeLayer = (CAShapeLayer*)self.layer;
         self.squareCaps = NO;
         self.lineColor = [UIColor whiteColor];
@@ -54,7 +54,7 @@
 
 - (void)setSquareCaps:(BOOL)squareCaps {
     _squareCaps = squareCaps;
-    if(squareCaps) {
+    if (squareCaps) {
         self.shapeLayer.lineCap = kCALineCapSquare;
     } else {
         self.shapeLayer.lineCap = kCALineCapRound;
@@ -73,9 +73,9 @@
 
 - (void)setProgress:(CGFloat)progress {
     CGFloat pro = progress;
-    if(pro < 0) {
+    if (pro < 0) {
         pro = 0;
-    } else if(pro > 1) {
+    } else if (pro > 1) {
         pro = 1;
     }
     _progress = pro;
@@ -84,9 +84,9 @@
 
 - (void)setProgress:(CGFloat)progress animated:(BOOL)animated {
     CGFloat pro = progress;
-    if(pro < 0) {
+    if (pro < 0) {
         pro = 0;
-    } else if(pro > 1) {
+    } else if (pro > 1) {
         pro = 1;
     }
     [self.shapeLayer removeAnimationForKey:@"strokeEnd"];

@@ -17,7 +17,7 @@ static void free_image_data(void *info, const void *data, size_t size) {
 @implementation WebPImage
 
 - (instancetype)initWithData:(NSData*)data {
-    if(self = [super init]) {
+    if (self = [super init]) {
         [self decode:data];
         _isDecoded = YES;
     }
@@ -25,17 +25,17 @@ static void free_image_data(void *info, const void *data, size_t size) {
 }
 
 - (instancetype)initWithData:(NSData*)data async:(WebPDecodeFinished)finished {
-    if(self = [super init]) {
+    if (self = [super init]) {
         _isDecoded = NO;
         __weak typeof(self) weakSelf = self;
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT,0),^{
             [self decode:data];
             dispatch_async(dispatch_get_main_queue(), ^{
                 _isDecoded = YES;
-                if(finished) {
+                if (finished) {
                     finished(weakSelf);
                 }
-                if(self.finishedDecode) {
+                if (self.finishedDecode) {
                     self.finishedDecode(weakSelf);
                 }
             });
@@ -45,7 +45,7 @@ static void free_image_data(void *info, const void *data, size_t size) {
 }
 
 - (instancetype)initWithImage:(UIImage*)img {
-    if(self = [super init]) {
+    if (self = [super init]) {
         _isDecoded = YES;
         _size = img.size;
         _frames = @[[[WebPFrame alloc] initWithFrame:
@@ -87,16 +87,16 @@ static void free_image_data(void *info, const void *data, size_t size) {
     //config.options.use_scaling = 1;
     CGFloat progressOffset = 1/(CGFloat)frameCount;
     CGFloat progress = 0;
-    if(flags & ANIMATION_FLAG) { // check if our features include animation. We could also just query the num of frames from the iterator.
+    if (flags & ANIMATION_FLAG) { // check if our features include animation. We could also just query the num of frames from the iterator.
         //int index = 0;
         WebPIterator iter; // that would like this iter.num_frames > 1
         if (WebPDemuxGetFrame(demux, 1, &iter)) { // init the iter and get the first frame.
             do {
                 WebPData frame = iter.fragment;
                 UIImage *image = [self createImage:frame.bytes size:frame.size config:&config scale:scale];
-                if(image) {
+                if (image) {
                     NSInteger duration = iter.duration;
-                    if(duration <= 0) {
+                    if (duration <= 0) {
                         duration = 100;
                     }
                     BOOL blend = (iter.blend_method == WEBP_MUX_BLEND);
@@ -115,7 +115,7 @@ static void free_image_data(void *info, const void *data, size_t size) {
         }
     } else {
         UIImage *image = [self createImage:webpData.bytes size:webpData.size config:&config scale:scale];
-        if(image) {
+        if (image) {
             [collect addObject:[[WebPFrame alloc] initWithFrame:
                                 CGRectMake(0, 0, image.size.width, image.size.height)
                                                         image:image dispose:YES blend:NO duration:0]];
@@ -129,12 +129,12 @@ static void free_image_data(void *info, const void *data, size_t size) {
 }
 
 - (void)updateProgress:(CGFloat)progress {
-    if(progress > 1) {
+    if (progress > 1) {
         progress = 1;
-    } else if(progress < 0) {
+    } else if (progress < 0) {
         progress = 0;
     }
-    if(self.decodeProgress) {
+    if (self.decodeProgress) {
         dispatch_async(dispatch_get_main_queue(), ^{
             self.decodeProgress(progress);
         });
@@ -142,7 +142,7 @@ static void free_image_data(void *info, const void *data, size_t size) {
 }
 
 - (UIImage *)createImage:(const uint8_t *)bytes size:(size_t)size config:(WebPDecoderConfig *)config scale:(CGFloat)scale {
-    if(WebPDecode(bytes, size, config) != VP8_STATUS_OK) {
+    if (WebPDecode(bytes, size, config) != VP8_STATUS_OK) {
         return nil;
     }
     //NSLog(@"output width: %d height: %d",config->output.width, config->output.height);
@@ -172,7 +172,7 @@ static void free_image_data(void *info, const void *data, size_t size) {
 @implementation WebPFrame
 
 - (instancetype)initWithFrame:(CGRect)frame image:(UIImage*)image dispose:(BOOL)dispose blend:(BOOL)blend duration:(NSInteger)duration {
-    if(self = [super init]) {
+    if (self = [super init]) {
         _frame = frame;
         _image = image;
         _dispose = dispose;

@@ -25,7 +25,7 @@
 @implementation WebPImageView
 
 - (instancetype)initWithFrame:(CGRect)frame {
-    if(self = [super initWithFrame:frame]) {
+    if (self = [super initWithFrame:frame]) {
         self.backgroundColor = [UIColor clearColor];
         self.aspectScale = 1;
         self.loopCount = 0;
@@ -39,7 +39,7 @@
     CGFloat alpha = 0;
     [self.backgroundColor getWhite:&white alpha:&alpha];
     self.isClear = NO;
-    if(alpha < 1) {
+    if (alpha < 1) {
         self.isClear = YES;
     }
 }
@@ -53,8 +53,8 @@
 - (void)setImage:(WebPImage *)image {
     _image.finishedDecode = nil; //don't care about the old image anymore
     _image = image;
-    if(image) {
-        if(!image.isDecoded) {
+    if (image) {
+        if (!image.isDecoded) {
             self.loadingView.hidden = NO;
             [self.loadingView setProgress:0];
             image.finishedDecode = ^(WebPImage *img){
@@ -71,7 +71,7 @@
 
 - (void)setUrl:(NSURL *)url {
     WebPImageManager *manager = [WebPImageManager sharedManager];
-    if(_url) {
+    if (_url) {
         [manager cancelImageForSession:self.urlSessionId url:_url];
     }
     _url = url;
@@ -91,7 +91,7 @@
     self.index = 0;
     self.iterationCount = 0;
     [self setNeedsLayout];
-    if(self.image.frames.count > 1) {
+    if (self.image.frames.count > 1) {
         self.animated = YES;
         [self doAnimation:self.image.frames[self.index]];
     } else {
@@ -100,11 +100,11 @@
 }
 
 -(void)doAnimation:(WebPFrame*)frame {
-    if(!self.animated) {
+    if (!self.animated) {
         return; //stop any running animated
     }
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, frame.displayDuration * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
-        if(self.index > 0) {
+        if (self.index > 0) {
             UIGraphicsBeginImageContextWithOptions(self.bounds.size, NO, 0.0);
             [self drawViewHierarchyInRect:self.bounds afterScreenUpdates:NO];
             UIImage * img = UIGraphicsGetImageFromCurrentImageContext();
@@ -112,14 +112,14 @@
             self.prevImg = img;
         }
         
-        if(self.index >= self.image.frames.count) {
+        if (self.index >= self.image.frames.count) {
             self.index = 0;
             self.prevImg = nil;
             self.iterationCount++;
-            if(self.didFinishAnimation) {
+            if (self.didFinishAnimation) {
                 self.didFinishAnimation(self.iterationCount);
             }
-            if(self.iterationCount >= self.loopCount && self.loopCount > 0) {
+            if (self.iterationCount >= self.loopCount && self.loopCount > 0) {
                 return;
             }
         }
@@ -136,13 +136,13 @@
                                         self.bounds.size.height-inset.bottom);
     CGFloat width = self.image.size.width;
     CGFloat height = self.image.size.height;
-    if(width > 0 && height > 0) {
+    if (width > 0 && height > 0) {
         BOOL isGreaterWidth = (width > self.bounds.size.width);
         BOOL isGreaterHeight = (height > self.bounds.size.height);
-        if(isGreaterWidth || isGreaterHeight) {
+        if (isGreaterWidth || isGreaterHeight) {
             CGFloat hScale = height/self.bounds.size.height;
             CGFloat wScale = width/self.bounds.size.width;
-            if(wScale > hScale && isGreaterWidth) {
+            if (wScale > hScale && isGreaterWidth) {
                 height = (height/width)*self.bounds.size.width;
                 width = self.bounds.size.width;
                 self.aspectScale = self.image.size.width/width;
@@ -156,10 +156,10 @@
         }
         CGFloat x = (self.bounds.size.width - width)/2;
         CGFloat y = (self.bounds.size.height - height)/2;
-        if(x < 0) {
+        if (x < 0) {
             x = 0;
         }
-        if(y < 0) {
+        if (y < 0) {
             y = 0;
         }
         self.offsetOrigin = CGPointMake(x, y);
@@ -167,28 +167,28 @@
 }
 
 - (void)setAspectScale:(CGFloat)aspectScale {
-    if(_aspectScale != aspectScale && !self.animated) {
+    if (_aspectScale != aspectScale && !self.animated) {
         [self setNeedsDisplay];
     }
     _aspectScale = aspectScale;
 }
 
 - (void)drawRect:(CGRect)rect {
-    if(self.image.frames.count == 0) {
+    if (self.image.frames.count == 0) {
         return; //nothing to draw so don't even try
     }
     CGContextRef ctx = UIGraphicsGetCurrentContext();
     [self.backgroundColor setFill];
-    if(self.prevImg) {
+    if (self.prevImg) {
         [self.prevImg drawInRect:self.bounds];
     }
-    if(self.index > 0 && self.index < self.image.frames.count) {
+    if (self.index > 0 && self.index < self.image.frames.count) {
         WebPFrame *prevFrame = self.image.frames[self.index-1];
-        if(prevFrame.dispose) {
+        if (prevFrame.dispose) {
             CGRect imgFrame = CGRectMake(self.offsetOrigin.x + (prevFrame.frame.origin.x/self.aspectScale),
                                          self.offsetOrigin.y + (prevFrame.frame.origin.y/self.aspectScale),
                                          prevFrame.frame.size.width/self.aspectScale, prevFrame.frame.size.height/self.aspectScale);
-            if(self.isClear) {
+            if (self.isClear) {
                 CGContextClearRect(ctx, imgFrame);
             } else {
                 CGContextFillRect(ctx, imgFrame);
@@ -199,15 +199,15 @@
     CGRect imgFrame = CGRectMake(self.offsetOrigin.x + (frame.frame.origin.x/self.aspectScale),
                                  self.offsetOrigin.y + (frame.frame.origin.y/self.aspectScale),
                                  frame.frame.size.width/self.aspectScale, frame.frame.size.height/self.aspectScale);
-    if(!frame.blend) {
-        if(self.isClear) {
+    if (!frame.blend) {
+        if (self.isClear) {
             CGContextClearRect(ctx, imgFrame);
         } else {
             CGContextFillRect(ctx, imgFrame);
         }
     }
     [frame.image drawInRect:imgFrame];
-    if(self.moveIndex) {
+    if (self.moveIndex) {
         self.index++;
         self.moveIndex = NO;
     }

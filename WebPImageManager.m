@@ -26,7 +26,7 @@ typedef void (^WebPDataFinished)(NSData*);
 @implementation WebPNetworkImage
 
 - (instancetype)initWithBlock:(WebPDataFinished)finish progress:(WebPImageProgress)progress {
-    if(self = [super init]) {
+    if (self = [super init]) {
         self.data = [[NSMutableData alloc] init];
         self.finished = finish;
         self.progress = progress;
@@ -51,7 +51,7 @@ typedef void (^WebPDataFinished)(NSData*);
 
 - (instancetype)initWithSession:(NSInteger)sessionId finished:(WebPImageFinished)finish
                        progress:(WebPImageProgress)progress {
-    if(self = [super init]) {
+    if (self = [super init]) {
         self.sessionId = sessionId;
         self.finished = finish;
         self.progress = progress;
@@ -91,7 +91,7 @@ typedef void (^WebPDataFinished)(NSData*);
 }
 
 - (instancetype)init {
-    if(self = [super init]) {
+    if (self = [super init]) {
         self.cache = [[NSCache alloc] init];
         self.maxCacheAge = kDefaultCacheMaxCacheAge;
         self.mainSession = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration] delegate:self delegateQueue:nil];
@@ -110,19 +110,19 @@ typedef void (^WebPDataFinished)(NSData*);
 - (NSInteger)imageForUrl:(NSURL*)url progress:(WebPImageProgress)progress finished:(WebPImageFinished)finished {
     NSString *hash = [self hashForUrl:url];
     WebPImage *img = [self.cache objectForKey:hash];
-    if(img) {
-        if(finished) {
+    if (img) {
+        if (finished) {
             finished(img);
         }
         return 0;
     }
     NSInteger sessionId = arc4random_uniform(10000) + 1;
-    if([self mapCheck:hash session:sessionId progress:progress finished:finished]) {
+    if ([self mapCheck:hash session:sessionId progress:progress finished:finished]) {
         return sessionId; //there is already request running for this image.
     }
     if ([url isFileURL]) {
         NSData *data = [NSData dataWithContentsOfURL:url];
-        if(data) {
+        if (data.length > 0) {
             [self finishData:data hash:hash startProgress:0];
         } else {
             [self completeBlocks:nil hash:hash];
@@ -130,20 +130,20 @@ typedef void (^WebPDataFinished)(NSData*);
         return sessionId;
     }
     [self dataFromCache:hash finished:^(NSData* data){
-        if(data) {
+        if (data.length > 0) {
             [self finishData:data hash:hash startProgress:0];
         } else {
             [self dataFromNetwork:url progress:^(CGFloat pro) {
                 NSArray *array = self.sessions[hash];
                 dispatch_async(dispatch_get_main_queue(), ^{
                     for(WebPSessionHolder *holder in array) {
-                        if(holder.progress) {
+                        if (holder.progress) {
                             holder.progress(pro/2);
                         }
                     }
                 });
             } finished:^(NSData *data) {
-                if(data) {
+                if (data.length > 0) {
                     NSString *cachePath = [[self cacheDirectory] stringByAppendingPathComponent:hash];
                     [data writeToFile:cachePath atomically:NO]; 
                     [self finishData:data hash:hash startProgress:0.5];
@@ -160,7 +160,7 @@ typedef void (^WebPDataFinished)(NSData*);
     NSString *hash = [self hashForUrl:url];
     NSMutableArray *array = self.sessions[hash];
     for(WebPSessionHolder *holder in array) {
-        if(holder.sessionId == session) {
+        if (holder.sessionId == session) {
             [array removeObject:holder];
             return;
         }
@@ -213,7 +213,7 @@ typedef void (^WebPDataFinished)(NSData*);
         progress:(WebPImageProgress)progress finished:(WebPImageFinished)finished {
     NSMutableArray *array = self.sessions[hash];
     BOOL isRunning = YES;
-    if(!array) {
+    if (!array) {
         isRunning = NO;
         array = [[NSMutableArray alloc] init];
         self.sessions[hash] = array;
@@ -226,7 +226,7 @@ typedef void (^WebPDataFinished)(NSData*);
 
 - (void)finishData:(NSData*)data hash:(NSString*)hash startProgress:(CGFloat)startProgress {
     CGFloat progressScale = 1/startProgress;
-    if(startProgress <= 0) {
+    if (startProgress <= 0) {
         progressScale = 1;
         startProgress = 0;
     }
@@ -238,7 +238,7 @@ typedef void (^WebPDataFinished)(NSData*);
         CGFloat overallProgress = startProgress + pro/progressScale;
         NSArray *array = self.sessions[hash];
         for(WebPSessionHolder *holder in array) {
-            if(holder.progress) {
+            if (holder.progress) {
                 holder.progress(overallProgress);
             }
         }
@@ -248,7 +248,7 @@ typedef void (^WebPDataFinished)(NSData*);
 - (void)completeBlocks:(WebPImage*)img hash:(NSString*)hash {
     NSArray *array = self.sessions[hash];
     for(WebPSessionHolder *holder in array) {
-        if(holder.finished) {
+        if (holder.finished) {
             holder.finished(img);
         }
     }
@@ -289,7 +289,7 @@ typedef void (^WebPDataFinished)(NSData*);
         NSString *cachePath = [[self cacheDirectory] stringByAppendingPathComponent:hash];
         NSDate *expirationDate = [NSDate dateWithTimeIntervalSinceNow:age];
         NSFileManager *manager = [NSFileManager defaultManager];
-        if([manager fileExistsAtPath:cachePath]) {
+        if ([manager fileExistsAtPath:cachePath]) {
             NSDictionary *attributes = [manager attributesOfItemAtPath:cachePath error:NULL];
             NSDate *modifyDate = [attributes fileModificationDate];
             if ([[modifyDate laterDate:expirationDate] isEqualToDate:expirationDate]) {
@@ -299,7 +299,7 @@ typedef void (^WebPDataFinished)(NSData*);
                 });
             } else {
                 NSData *data = [manager contentsAtPath:cachePath];
-                if(data) {
+                if (data) {
                     dispatch_async(dispatch_get_main_queue(), ^{
                         finished(data); //found it an image let the manager know
                     });
@@ -325,7 +325,7 @@ typedef void (^WebPDataFinished)(NSData*);
 didCompleteWithError:(NSError *)error {
     NSNumber *taskId = @(task.taskIdentifier);
     WebPNetworkImage *netImage = self.networkDict[taskId];
-    if(netImage.finished) {
+    if (netImage.finished) {
         netImage.finished(netImage.data);
     }
     [self.networkDict removeObjectForKey:taskId];
@@ -335,7 +335,7 @@ didCompleteWithError:(NSError *)error {
     didReceiveData:(NSData *)data {
     WebPNetworkImage *netImage = self.networkDict[@(task.taskIdentifier)];
     [netImage.data appendData:data];
-    if(task.response.expectedContentLength >= netImage.data.length) {
+    if (task.response.expectedContentLength >= netImage.data.length) {
         CGFloat scale = 1/(CGFloat)task.response.expectedContentLength;
         netImage.progress(scale*netImage.data.length);
     }
