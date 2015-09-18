@@ -103,6 +103,9 @@
     if (!self.animated) {
         return; //stop any running animated
     }
+    if (self.iterationCount >= self.loopCount && self.loopCount > 0) {
+        return;
+    }
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, frame.displayDuration * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
         if (self.index > 0) {
             UIGraphicsBeginImageContextWithOptions(self.bounds.size, NO, 0.0);
@@ -120,6 +123,7 @@
                 self.didFinishAnimation(self.iterationCount);
             }
             if (self.iterationCount >= self.loopCount && self.loopCount > 0) {
+                self.index = self.image.frames.count-1;
                 return;
             }
         }
