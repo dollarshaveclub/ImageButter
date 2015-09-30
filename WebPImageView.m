@@ -96,9 +96,8 @@
     if (self.image.frames.count > 1) {
         self.animated = YES;
         [self doAnimation:self.image.frames[self.index]];
-    } else {
-        [self setNeedsDisplay];
     }
+    [self setNeedsDisplay];
 }
 
 -(void)doAnimation:(WebPFrame*)frame {
