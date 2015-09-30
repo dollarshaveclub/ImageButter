@@ -57,11 +57,12 @@
         if (!image.isDecoded) {
             self.loadingView.hidden = NO;
             [self.loadingView setProgress:0];
+            __weak typeof(self) weakSelf = self;
             image.finishedDecode = ^(WebPImage *img){
-                [self startDisplay];
+                [weakSelf startDisplay];
             };
             image.decodeProgress = ^(CGFloat pro) {
-                [self.loadingView setProgress:pro];
+                [weakSelf.loadingView setProgress:pro];
             };
         } else {
             [self startDisplay];
@@ -77,10 +78,11 @@
     _url = url;
     self.loadingView.hidden = NO;
     [self.loadingView setProgress:0];
+    __weak typeof(self) weakSelf = self;
     self.urlSessionId = [manager imageForUrl:url progress:^(CGFloat pro) {
-        [self.loadingView setProgress:pro];
+        [weakSelf.loadingView setProgress:pro];
     } finished:^(WebPImage *img) {
-        self.image = img;
+        weakSelf.image = img;
     }];
 }
 
@@ -106,30 +108,31 @@
     if (self.iterationCount >= self.loopCount && self.loopCount > 0) {
         return;
     }
+    __weak typeof(self) weakSelf = self;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, frame.displayDuration * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
-        if (self.index > 0) {
-            UIGraphicsBeginImageContextWithOptions(self.bounds.size, NO, 0.0);
-            [self drawViewHierarchyInRect:self.bounds afterScreenUpdates:NO];
+        if (weakSelf.index > 0) {
+            UIGraphicsBeginImageContextWithOptions(weakSelf.bounds.size, NO, 0.0);
+            [weakSelf drawViewHierarchyInRect:weakSelf.bounds afterScreenUpdates:NO];
             UIImage * img = UIGraphicsGetImageFromCurrentImageContext();
             UIGraphicsEndImageContext();
-            self.prevImg = img;
+            weakSelf.prevImg = img;
         }
         
-        if (self.index >= self.image.frames.count) {
-            self.index = 0;
-            self.prevImg = nil;
-            self.iterationCount++;
-            if (self.didFinishAnimation) {
-                self.didFinishAnimation(self.iterationCount);
+        if (weakSelf.index >= weakSelf.image.frames.count) {
+            weakSelf.index = 0;
+            weakSelf.prevImg = nil;
+            weakSelf.iterationCount++;
+            if (weakSelf.didFinishAnimation) {
+                weakSelf.didFinishAnimation(weakSelf.iterationCount);
             }
-            if (self.iterationCount >= self.loopCount && self.loopCount > 0) {
-                self.index = self.image.frames.count-1;
+            if (weakSelf.iterationCount >= weakSelf.loopCount && weakSelf.loopCount > 0) {
+                weakSelf.index = weakSelf.image.frames.count-1;
                 return;
             }
         }
-        [self setNeedsDisplay];
-        self.moveIndex = YES;
-        [self doAnimation:self.image.frames[self.index]];
+        [weakSelf setNeedsDisplay];
+        weakSelf.moveIndex = YES;
+        [weakSelf doAnimation:weakSelf.image.frames[weakSelf.index]];
     });
 }
 
