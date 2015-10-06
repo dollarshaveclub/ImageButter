@@ -101,7 +101,7 @@
 }
 
 -(void)doAnimation:(WebPFrame*)frame {
-    if (!self.animated) {
+    if (!self.animated || self.pause) {
         return; //stop any running animated
     }
     if (self.iterationCount >= self.loopCount && self.loopCount > 0) {
@@ -177,6 +177,13 @@
         [self setNeedsDisplay];
     }
     _aspectScale = aspectScale;
+}
+
+- (void)setPause:(BOOL)pause {
+    _pause = pause;
+    if(!pause) {
+        [self doAnimation:self.image.frames[self.index]];
+    }
 }
 
 - (void)drawRect:(CGRect)rect {

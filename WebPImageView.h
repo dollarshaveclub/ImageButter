@@ -39,6 +39,11 @@ fetch the image from disk or remotely.
 @property(nonatomic)NSInteger loopCount;
 
 /**
+ Set to true to pause the animation.
+ */
+@property(nonatomic)BOOL pause;
+
+/**
  notifieds when an animation has finished a loop.
  */
 @property(nonatomic, strong)WebPAnimationFinished didFinishAnimation;
