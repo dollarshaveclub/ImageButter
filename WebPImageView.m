@@ -188,7 +188,9 @@
         if (self.index >= self.image.frames.count) {
             self.index = self.image.frames.count-1;
         }
-        [self doAnimation:self.image.frames[self.index]];
+        if(self.image.frames.count > 0) {
+            [self doAnimation:self.image.frames[self.index]];
+        }
     }
 }
 
