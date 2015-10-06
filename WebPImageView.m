@@ -129,6 +129,9 @@
                 return;
             }
         }
+        if (weakSelf.pause) {
+            return;
+        }
         [weakSelf setNeedsDisplay];
         weakSelf.moveIndex = YES;
         [weakSelf doAnimation:weakSelf.image.frames[weakSelf.index]];
