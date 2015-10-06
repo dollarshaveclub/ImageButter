@@ -185,6 +185,9 @@
 - (void)setPause:(BOOL)pause {
     _pause = pause;
     if(!pause) {
+        if (self.index >= self.image.frames.count) {
+            self.index = self.image.frames.count-1;
+        }
         [self doAnimation:self.image.frames[self.index]];
     }
 }
