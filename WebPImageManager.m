@@ -108,6 +108,9 @@ typedef void (^WebPDataFinished)(NSData*);
 }
 
 - (NSInteger)imageForUrl:(NSURL*)url progress:(WebPImageProgress)progress finished:(WebPImageFinished)finished {
+    if(!url) {
+        return -1;
+    }
     NSString *hash = [self hashForUrl:url];
     WebPImage *img = [self.cache objectForKey:hash];
     if (img) {
