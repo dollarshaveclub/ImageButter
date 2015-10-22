@@ -92,12 +92,20 @@
     self.prevImg = nil;
     self.index = 0;
     self.iterationCount = 0;
+    [self invalidateIntrinsicContentSize];
     [self setNeedsLayout];
     if (self.image.frames.count > 1) {
         self.animated = YES;
         [self doAnimation:self.image.frames[self.index]];
     }
     [self setNeedsDisplay];
+}
+
+- (CGSize)intrinsicContentSize {
+    if (self) {
+      return self.image.size;
+    }
+    return CGSizeZero;
 }
 
 -(void)doAnimation:(WebPFrame*)frame {
