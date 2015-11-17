@@ -146,7 +146,7 @@ typedef void (^WebPDataFinished)(NSData*);
                     }
                 });
             } finished:^(NSData *data) {
-                if (data.length > 0) {
+                if (data.length > 0 && [WebPImage isValidImage:data]) {
                     NSString *cachePath = [[self cacheDirectory] stringByAppendingPathComponent:hash];
                     [data writeToFile:cachePath atomically:NO]; 
                     [self finishData:data hash:hash startProgress:0.5];

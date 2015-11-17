@@ -92,4 +92,9 @@ this is a property is to be ignored. It is exposed so the WebPImageView can be n
  */
 @property(nonatomic,strong)WebPDecodeFinished finishedDecode;
 
+/**
+ Returns true if it is a valid image type.
+*/
++ (BOOL)isValidImage:(NSData*)data;
+
 @end

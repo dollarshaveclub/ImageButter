@@ -9,6 +9,8 @@
 #import <WebP/decode.h>
 #import <WebP/demux.h>
 #import "WebPImageManager.h"
+#import <ImageIO/ImageIO.h>
+#import <MobileCoreServices/MobileCoreServices.h>
 
 static void free_image_data(void *info, const void *data, size_t size) {
     free((void *)data);
@@ -57,12 +59,87 @@ static void free_image_data(void *info, const void *data, size_t size) {
 }
 
 - (void)decode:(NSData*)data {
+    CGFloat scale = [[UIScreen mainScreen] scale];
+    if(WebPGetInfo(data.bytes, data.length, NULL, NULL)) {
+        [self decodeWebPData:data scale:scale];
+    } else {
+        CGImageSourceRef ref = CGImageSourceCreateWithData((__bridge CFDataRef)data, NULL);
+        if(ref) {
+            CFStringRef imageSourceContainerType = CGImageSourceGetType(ref);
+            if(imageSourceContainerType) {
+                if(UTTypeConformsTo(imageSourceContainerType, kUTTypeGIF)) {
+                    [self decodeGif:ref data:data scale:scale];
+                } else if(UTTypeConformsTo(imageSourceContainerType, kUTTypeImage)) {
+                    UIImage *image = [UIImage imageWithData:data scale:scale];
+                    if(image) {
+                        _size = image.size;
+                        _frames = @[[[WebPFrame alloc] initWithFrame:
+                                     CGRectMake(0, 0, image.size.width, image.size.height)
+                                                               image:image dispose:YES blend:NO duration:0]];
+                        [self updateProgress:1];
+                    }
+                } else {
+                    //failed to decode... need to give some kind of status for that
+                }
+                CFRelease(imageSourceContainerType);
+            }
+            CFRelease(ref);
+        }
+    }
+}
+
+- (void)decodeGif:(CGImageSourceRef)ref data:(NSData*)data scale:(CGFloat)scale {
+    //NSDictionary *imageProps = (__bridge_transfer NSDictionary *)CGImageSourceCopyProperties(ref, NULL);
+    //NSDictionary *mainGifProps = imageProps[(id)kCGImagePropertyGIFDictionary];
+    //NSInteger loopCount = [gifProps[(id)kCGImagePropertyGIFLoopCount] unsignedIntegerValue];
+    NSInteger largestWidth = 0;
+    NSInteger largestHeight = 0;
+    size_t frameCount = CGImageSourceGetCount(ref);
+    CGFloat progressOffset = 1/(CGFloat)frameCount;
+    CGFloat progress = 0;
+    NSMutableArray *collect = [NSMutableArray arrayWithCapacity:frameCount];
+     for (size_t i = 0; i < frameCount; i++) {
+         CGImageRef imageRef = CGImageSourceCreateImageAtIndex(ref, i, NULL);
+         if(imageRef) {
+             UIImage *image = [UIImage imageWithCGImage:imageRef scale:scale orientation:UIImageOrientationUp];
+             NSDictionary *frameProps = (__bridge_transfer NSDictionary *)CGImageSourceCopyPropertiesAtIndex(ref, i, NULL);
+             NSDictionary *gifProps = [frameProps objectForKey:(id)kCGImagePropertyGIFDictionary];
+             NSInteger height = [frameProps[(id)kCGImagePropertyPixelHeight] integerValue];
+             NSInteger width = [frameProps[(id)kCGImagePropertyPixelWidth] integerValue];
+             CGRect frame = CGRectMake(0, 0, width/scale, height/scale);
+             if(frame.size.height > largestHeight) {
+                 largestHeight = frame.size.height;
+                 largestWidth = frame.size.width;
+             }
+             NSNumber *delayTime = [gifProps objectForKey:(id)kCGImagePropertyGIFUnclampedDelayTime];
+             if (!delayTime) {
+                 delayTime = [gifProps objectForKey:(id)kCGImagePropertyGIFDelayTime];
+             }
+             CGFloat duration = 0;
+             if(delayTime) {
+                 duration = [delayTime floatValue];
+             }
+             if(duration == 0) {
+                 duration = 0.1;
+             }
+             duration = duration*1000; //go from centisecond of a gif to milliseconds
+             [collect addObject:[[WebPFrame alloc] initWithFrame:frame image:image
+                                                         dispose:YES blend:NO
+                                                        duration:duration]];
+             progress += progressOffset;
+             [self updateProgress:progress];
+         }
+     }
+    _size = CGSizeMake(largestWidth, largestHeight);
+    _frames = collect;
+}
+
+- (void)decodeWebPData:(NSData*)data scale:(CGFloat)scale {
     NSMutableArray *collect = [NSMutableArray array];
     WebPData webpData;
     WebPDataInit(&webpData);
     webpData.bytes = (const uint8_t *)[data bytes];
     webpData.size = [data length];
-    CGFloat scale = [[UIScreen mainScreen] scale];
     
     // setup the demux we need for animated webp images.
     WebPDemuxer* demux = WebPDemux(&webpData);
@@ -104,8 +181,8 @@ static void free_image_data(void *info, const void *data, size_t size) {
                     CGRect frame = CGRectMake(iter.x_offset/scale, iter.y_offset/scale,
                                               iter.width/scale, iter.height/scale);
                     [collect addObject:[[WebPFrame alloc] initWithFrame:frame image:image
-                                                              dispose:dispose blend:blend
-                                                             duration:duration]];
+                                                                dispose:dispose blend:blend
+                                                               duration:duration]];
                     progress += progressOffset;
                     [self updateProgress:progress];
                 }
@@ -118,7 +195,7 @@ static void free_image_data(void *info, const void *data, size_t size) {
         if (image) {
             [collect addObject:[[WebPFrame alloc] initWithFrame:
                                 CGRectMake(0, 0, image.size.width, image.size.height)
-                                                        image:image dispose:YES blend:NO duration:0]];
+                                                          image:image dispose:YES blend:NO duration:0]];
             progress += progressOffset;
             [self updateProgress:progress];
         }
@@ -163,6 +240,24 @@ static void free_image_data(void *info, const void *data, size_t size) {
     WebPFreeDecBuffer(&config->output);
     
     return image;
+}
+
++ (BOOL)isValidImage:(NSData*)data {
+    if(WebPGetInfo(data.bytes, data.length, NULL, NULL)) {
+        return YES; //is a valid webp image
+    }
+    CGImageSourceRef ref = CGImageSourceCreateWithData((__bridge CFDataRef)data, NULL);
+    if(ref) {
+        BOOL isImage = NO;
+        CFStringRef imageSourceContainerType = CGImageSourceGetType(ref);
+        if(imageSourceContainerType) {
+            isImage = UTTypeConformsTo(imageSourceContainerType, kUTTypeImage);
+            CFRelease(imageSourceContainerType);
+        }
+        CFRelease(ref);
+        return isImage;
+    }
+    return NO;
 }
 
 @end

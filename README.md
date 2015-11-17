@@ -8,6 +8,8 @@ WebP image viewer for iOS. What is WebP? Find out more [here](https://developers
 - Avoids duplicated requests
 - Async decoding
 - Loading/progress view
+- Animated Gifs
+- PNGs/JPG/standard formats
 
 ## Example
 
@@ -39,7 +41,8 @@ You can't see the image above? Sadness. You should open this in the Chrome brows
 
 ## Requirements ##
 
-WebPObjc requires at least iOS 7 or above.
+WebPObjc requires at least iOS 7 or above. 
+Dependencies are ImageIO and MobileCoreServices.
 
 ## Installation
 
