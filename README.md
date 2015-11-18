@@ -42,7 +42,7 @@ You can't see the image above? Sadness. You should open this in the Chrome brows
 ## Requirements ##
 
 WebPObjc requires at least iOS 7 or above. 
-Dependencies are ImageIO and MobileCoreServices.
+Dependencies are ImageIO, MobileCoreServices, CoreGraphics, and CommonCrypto.
 
 ## Installation
 
