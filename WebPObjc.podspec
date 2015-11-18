@@ -6,7 +6,7 @@ Pod::Spec.new do |s|
   s.source       = { :git => "https://github.com/dollarshaveclub/WebPObjc.git", :tag => "#{s.version}" }
   s.ios.deployment_target = '7.0'
   s.ios.vendored_frameworks = 'WebP.framework'
-  s.frameworks   = "CommonCrypto", "ImageIO", "MobileCoreServices", "CoreGraphics"
+  s.frameworks   = "commonCrypto", "ImageIO", "MobileCoreServices", "CoreGraphics"
   s.source_files = '*.{h,m}'
   s.requires_arc = true
 end
