@@ -1,5 +1,5 @@
 //
-//  WPImage.m
+//  WebPImage.m
 //  WebPObjc
 //
 //  Created by Dalton Cherry on 8/27/15.
@@ -79,7 +79,7 @@ static void free_image_data(void *info, const void *data, size_t size) {
                         [self updateProgress:1];
                     }
                 } else {
-                    //failed to decode... need to give some kind of status for that
+                    //failed to decode... you should have checked if it was valid first
                 }
                 CFRelease(imageSourceContainerType);
             }
@@ -91,7 +91,7 @@ static void free_image_data(void *info, const void *data, size_t size) {
 - (void)decodeGif:(CGImageSourceRef)ref data:(NSData*)data scale:(CGFloat)scale {
     //NSDictionary *imageProps = (__bridge_transfer NSDictionary *)CGImageSourceCopyProperties(ref, NULL);
     //NSDictionary *mainGifProps = imageProps[(id)kCGImagePropertyGIFDictionary];
-    //NSInteger loopCount = [gifProps[(id)kCGImagePropertyGIFLoopCount] unsignedIntegerValue];
+    //NSInteger loopCount = [mainGifProps[(id)kCGImagePropertyGIFLoopCount] unsignedIntegerValue];
     NSInteger largestWidth = 0;
     NSInteger largestHeight = 0;
     size_t frameCount = CGImageSourceGetCount(ref);
@@ -158,10 +158,7 @@ static void free_image_data(void *info, const void *data, size_t size) {
     // setup the config. Probably need this to be customizable.
     WebPDecoderConfig config;
     WebPInitDecoderConfig(&config);
-    //config.options.no_fancy_upsampling = 1;
-    //config.options.bypass_filtering = 1;
     config.options.use_threads = 1;
-    //config.options.use_scaling = 1;
     CGFloat progressOffset = 1/(CGFloat)frameCount;
     CGFloat progress = 0;
     if (flags & ANIMATION_FLAG) { // check if our features include animation. We could also just query the num of frames from the iterator.
@@ -222,7 +219,6 @@ static void free_image_data(void *info, const void *data, size_t size) {
     if (WebPDecode(bytes, size, config) != VP8_STATUS_OK) {
         return nil;
     }
-    //NSLog(@"output width: %d height: %d",config->output.width, config->output.height);
     int width, height = 0;
     uint8_t *data = WebPDecodeRGBA(bytes, size, &width, &height);
     // Construct a UIImage from the decoded RGBA value array

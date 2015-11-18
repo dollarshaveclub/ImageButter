@@ -125,7 +125,7 @@ typedef void (^WebPDataFinished)(NSData*);
     }
     if ([url isFileURL]) {
         NSData *data = [NSData dataWithContentsOfURL:url];
-        if (data.length > 0) {
+        if (data.length > 0 && [WebPImage isValidImage:data]) {
             [self finishData:data hash:hash startProgress:0];
         } else {
             [self completeBlocks:nil hash:hash];
