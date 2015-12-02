@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = "WebPObjc"
-  s.version      = "0.1.6"
+  s.version      = "0.1.7"
   s.summary      = "WebP image viewer for iOS. Static and animated images. Remote loading and caching with progress view."
   s.homepage     = "https://github.com/dollarshaveclub/WebPObjc"
   s.source       = { :git => "https://github.com/dollarshaveclub/WebPObjc.git", :tag => "#{s.version}" }
