@@ -58,7 +58,7 @@
             self.loadingView.hidden = NO;
             [self.loadingView setProgress:0];
             __weak typeof(self) weakSelf = self;
-            image.finishedDecode = ^(WebPImage *img){
+            image.finishedDecode = ^(WebPImage *img) {
                 [weakSelf startDisplay];
             };
             image.decodeProgress = ^(CGFloat pro) {
@@ -67,6 +67,8 @@
         } else {
             [self startDisplay];
         }
+    } else {
+        [self startDisplay];
     }
 }
 
