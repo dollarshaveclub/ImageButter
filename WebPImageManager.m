@@ -137,8 +137,8 @@ typedef void (^WebPDataFinished)(NSData*);
             [self finishData:data hash:hash startProgress:0];
         } else {
             [self dataFromNetwork:url progress:^(CGFloat pro) {
-                NSArray *array = self.sessions[hash];
                 dispatch_async(dispatch_get_main_queue(), ^{
+                    NSArray *array = self.sessions[hash];
                     for(WebPSessionHolder *holder in array) {
                         if (holder.progress) {
                             holder.progress(pro/2);

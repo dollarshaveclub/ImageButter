@@ -226,21 +226,23 @@
             }
         }
     }
-    WebPFrame *frame = self.image.frames[self.index];
-    CGRect imgFrame = CGRectMake(self.offsetOrigin.x + (frame.frame.origin.x/self.aspectScale),
-                                 self.offsetOrigin.y + (frame.frame.origin.y/self.aspectScale),
-                                 frame.frame.size.width/self.aspectScale, frame.frame.size.height/self.aspectScale);
-    if (!frame.blend) {
-        if (self.isClear) {
-            CGContextClearRect(ctx, imgFrame);
-        } else {
-            CGContextFillRect(ctx, imgFrame);
+    if(self.index > -1 && self.index < self.image.frames.count) {
+        WebPFrame *frame = self.image.frames[self.index];
+        CGRect imgFrame = CGRectMake(self.offsetOrigin.x + (frame.frame.origin.x/self.aspectScale),
+                                     self.offsetOrigin.y + (frame.frame.origin.y/self.aspectScale),
+                                     frame.frame.size.width/self.aspectScale, frame.frame.size.height/self.aspectScale);
+        if (!frame.blend) {
+            if (self.isClear) {
+                CGContextClearRect(ctx, imgFrame);
+            } else {
+                CGContextFillRect(ctx, imgFrame);
+            }
         }
-    }
-    [frame.image drawInRect:imgFrame];
-    if (self.moveIndex) {
-        self.index++;
-        self.moveIndex = NO;
+        [frame.image drawInRect:imgFrame];
+        if (self.moveIndex) {
+            self.index++;
+            self.moveIndex = NO;
+        }
     }
 }
 
