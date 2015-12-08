@@ -59,6 +59,7 @@ static void free_image_data(void *info, const void *data, size_t size) {
 }
 
 - (void)decode:(NSData*)data {
+    _hasAlpha = YES;
     CGFloat scale = [[UIScreen mainScreen] scale];
     if(WebPGetInfo(data.bytes, data.length, NULL, NULL)) {
         [self decodeWebPData:data scale:scale];
@@ -69,6 +70,7 @@ static void free_image_data(void *info, const void *data, size_t size) {
             if(imageSourceContainerType) {
                 if(UTTypeConformsTo(imageSourceContainerType, kUTTypeGIF)) {
                     [self decodeGif:ref data:data scale:scale];
+                    _hasAlpha = NO;
                 } else if(UTTypeConformsTo(imageSourceContainerType, kUTTypeImage)) {
                     UIImage *image = [UIImage imageWithData:data scale:scale];
                     if(image) {

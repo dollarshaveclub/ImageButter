@@ -19,6 +19,7 @@
 @property(nonatomic)NSInteger urlSessionId;
 @property(nonatomic)NSInteger iterationCount; //how times has the animation looped
 @property(nonatomic)BOOL moveIndex;
+@property(nonatomic, copy)NSString *context;
 
 @end
 
@@ -94,6 +95,7 @@
     self.prevImg = nil;
     self.index = 0;
     self.iterationCount = 0;
+    [self newContext];
     [self invalidateIntrinsicContentSize];
     [self setNeedsLayout];
     if (self.image.frames.count > 1) {
@@ -110,6 +112,15 @@
     return CGSizeZero;
 }
 
+- (void)newContext {
+    static NSString *letters = @"abcdefghijklmnopqurstuvwxyz";
+    NSMutableString *str = [NSMutableString new];
+    for(int i = 0; i < 14; i++) {
+        [str appendFormat:@"%c",[letters characterAtIndex:arc4random() % 14]];
+    }
+    self.context = [NSString stringWithFormat:@"%@",str];
+}
+
 -(void)doAnimation:(WebPFrame*)frame {
     if (!self.animated || self.pause) {
         return; //stop any running animated
@@ -117,9 +128,10 @@
     if (self.iterationCount >= self.loopCount && self.loopCount > 0) {
         return;
     }
+    NSString *ctx = [self.context copy];
     __weak typeof(self) weakSelf = self;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, frame.displayDuration * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
-        if (weakSelf.index > 0) {
+        if (weakSelf.index > 0 && weakSelf.image.hasAlpha) {
             UIGraphicsBeginImageContextWithOptions(weakSelf.bounds.size, NO, 0.0);
             [weakSelf drawViewHierarchyInRect:weakSelf.bounds afterScreenUpdates:NO];
             UIImage * img = UIGraphicsGetImageFromCurrentImageContext();
@@ -144,7 +156,9 @@
         }
         [weakSelf setNeedsDisplay];
         weakSelf.moveIndex = YES;
-        [weakSelf doAnimation:weakSelf.image.frames[weakSelf.index]];
+        if([ctx isEqualToString:weakSelf.context]) {
+            [weakSelf doAnimation:weakSelf.image.frames[weakSelf.index]];
+        }
     });
 }
 
@@ -199,6 +213,7 @@
             self.index = self.image.frames.count-1;
         }
         if(self.image.frames.count > 0) {
+            [self newContext];
             [self doAnimation:self.image.frames[self.index]];
         }
     }

@@ -93,6 +93,11 @@ this is a property is to be ignored. It is exposed so the WebPImageView can be n
 @property(nonatomic,strong)WebPDecodeFinished finishedDecode;
 
 /**
+ this is a property can be ignored most of the time. It is exposed so the WebPImageView can use it as drawing optimzation for animated gifs
+ */
+@property(nonatomic, readonly)BOOL hasAlpha;
+
+/**
  Returns true if it is a valid image type.
 */
 + (BOOL)isValidImage:(NSData*)data;
