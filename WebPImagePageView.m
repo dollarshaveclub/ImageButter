@@ -38,6 +38,8 @@
     self.scrollView = [[UIScrollView alloc] init];
     self.scrollView.delegate = self;
     self.scrollView.pagingEnabled = YES;
+    self.scrollView.showsHorizontalScrollIndicator = NO;
+    self.scrollView.showsVerticalScrollIndicator = NO;
     [self addSubview:self.scrollView];
     self.recycleSet = [[NSMutableSet alloc] init];
     self.currentSet = [[NSMutableSet alloc] init];
@@ -65,6 +67,7 @@
     }
     self.currentIndex = index;
     if(didChange) {
+        [self.delegate didChangeImage:self index:self.currentIndex];
         [self showPage];
     }
 }
