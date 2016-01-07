@@ -261,4 +261,8 @@
     }
 }
 
+- (CGFloat)aspect {
+    return self.aspectScale;
+}
+
 @end

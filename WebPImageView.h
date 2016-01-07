@@ -44,8 +44,13 @@ fetch the image from disk or remotely.
 @property(nonatomic)BOOL pause;
 
 /**
- notifieds when an animation has finished a loop.
+ notifies when an animation has finished a loop.
  */
 @property(nonatomic, strong)WebPAnimationFinished didFinishAnimation;
+
+/**
+ returns the current aspect scaling that is being applied to the image (1 means none)
+ */
+@property(nonatomic, readonly)CGFloat aspect;
 
 @end
