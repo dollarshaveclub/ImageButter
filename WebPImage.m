@@ -1,6 +1,6 @@
 //
 //  WebPImage.m
-//  WebPObjc
+//  ImageButter
 //
 //  Created by Dalton Cherry on 8/27/15.
 //
@@ -91,9 +91,6 @@ static void free_image_data(void *info, const void *data, size_t size) {
 }
 
 - (void)decodeGif:(CGImageSourceRef)ref data:(NSData*)data scale:(CGFloat)scale {
-    //NSDictionary *imageProps = (__bridge_transfer NSDictionary *)CGImageSourceCopyProperties(ref, NULL);
-    //NSDictionary *mainGifProps = imageProps[(id)kCGImagePropertyGIFDictionary];
-    //NSInteger loopCount = [mainGifProps[(id)kCGImagePropertyGIFLoopCount] unsignedIntegerValue];
     NSInteger largestWidth = 0;
     NSInteger largestHeight = 0;
     size_t frameCount = CGImageSourceGetCount(ref);
@@ -157,7 +154,7 @@ static void free_image_data(void *info, const void *data, size_t size) {
     int a = backgroundColor         & 0xff;  // low-order byte: bits 0-7
     _backgroundColor = [UIColor colorWithRed:r/255.0f green:g/255.0f blue:b/255.0f alpha:a/255.0f];
     _size = CGSizeMake(canvasWidth, canvasHeight);
-    // setup the config. Probably need this to be customizable.
+    // setup the config. Could Probably make this customizable.
     WebPDecoderConfig config;
     WebPInitDecoderConfig(&config);
     config.options.use_threads = 1;

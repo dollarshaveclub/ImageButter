@@ -1,6 +1,6 @@
 //
 //  WebPLoadingView.h
-//  WebPObjc
+//  ImageButter
 //
 //  Created by Dalton Cherry on 9/2/15.
 //

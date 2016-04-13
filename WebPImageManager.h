@@ -1,6 +1,6 @@
 //
 //  WebPImageManager.h
-//  WebPObjc
+//  ImageButter
 //
 //  Created by Dalton Cherry on 9/1/15.
 //

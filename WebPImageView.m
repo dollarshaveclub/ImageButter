@@ -1,6 +1,6 @@
 //
 //  WebPImageView.m
-//  WebPObjc
+//  ImageButter
 //
 //  Created by Dalton Cherry on 8/27/15.
 //
