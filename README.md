@@ -36,7 +36,7 @@ imgView.loadingInset = UIEdgeInsetsMake(pad, pad, pad*2, pad*2);
 ```
 That will fetch the image, cache it, and decoding it all asynchronously. It will show a progress view showing the total download and display time. The can see the value of it being a WebP image here:
 
-![](http://engineering.dollarshaveclub.com/assets/images/image-size-graph.png)
+![](https://raw.githubusercontent.com/dollarshaveclub/imagebutter/assets/image-size-graph.jpg)
 
 ## Requirements ##
 
