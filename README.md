@@ -63,6 +63,10 @@ To use ImageButter in your project add the following 'Podfile' to your project
 Then run:
 
     pod install
+
+## Tests
+
+One of our TODOs. We would mighty appreciate any PRs in this department.
 	
 ## License
 
