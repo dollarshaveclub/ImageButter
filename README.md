@@ -54,7 +54,7 @@ Install CocoaPods if not already available:
 	$ [sudo] gem install cocoapods
 	$ pod setup
 
-To use WebPObjc in your project add the following 'Podfile' to your project
+To use ImageButter in your project add the following 'Podfile' to your project
 
 	source 'https://github.com/CocoaPods/Specs.git'
 	platform :ios, '9.0'
