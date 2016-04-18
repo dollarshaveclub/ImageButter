@@ -45,7 +45,7 @@ Dependencies are ImageIO, MobileCoreServices, CoreGraphics, and CommonCrypto.
 
 ## Installation
 
-### Cocoapods
+### CocoaPods
 
 Check out [Get Started](https://guides.cocoapods.org/using/getting-started.html) tab on [cocoapods.org](http://cocoapods.org/).
 
