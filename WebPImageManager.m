@@ -329,7 +329,9 @@ didCompleteWithError:(NSError *)error {
     NSNumber *taskId = @(task.taskIdentifier);
     WebPNetworkImage *netImage = self.networkDict[taskId];
     if (netImage.finished) {
-        netImage.finished(netImage.data);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            netImage.finished(netImage.data);
+        });
     }
     [self.networkDict removeObjectForKey:taskId];
 }
