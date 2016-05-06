@@ -45,7 +45,7 @@ Dependencies are ImageIO, MobileCoreServices, CoreGraphics, and CommonCrypto.
 
 ## Installation
 
-### Cocoapods
+### CocoaPods
 
 Check out [Get Started](https://guides.cocoapods.org/using/getting-started.html) tab on [cocoapods.org](http://cocoapods.org/).
 
@@ -63,6 +63,10 @@ To use ImageButter in your project add the following 'Podfile' to your project
 Then run:
 
     pod install
+
+## Tests
+
+One of our TODOs. We would mighty appreciate any PRs in this department.
 	
 ## License
 
