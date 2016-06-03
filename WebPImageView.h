@@ -19,7 +19,7 @@ typedef void (^WebPAnimationFinished)(NSInteger);
 @property(nonatomic)WebPImage *image;
 
 /**
-fetch the image from disk or remotely.
+  fetch the image from disk or remotely.
  */
 @property(nonatomic)NSURL *url;
 

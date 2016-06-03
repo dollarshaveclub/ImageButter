@@ -20,18 +20,60 @@
 @property(nonatomic)NSInteger iterationCount; //how times has the animation looped
 @property(nonatomic)BOOL moveIndex;
 @property(nonatomic, copy)NSString *context;
-
+@property(nonatomic)CADisplayLink *displayLink;
 @end
 
 @implementation WebPImageView
 
 - (instancetype)initWithFrame:(CGRect)frame {
     if (self = [super initWithFrame:frame]) {
+        self.image = [[WebPImage alloc] init];
+        self.displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(displayDidRefresh:)];
+        [self.displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSDefaultRunLoopMode];
         self.backgroundColor = [UIColor clearColor];
         self.aspectScale = 1;
         self.loopCount = 0;
+        self.displayLink.paused = YES;
+        self.layer.contentsScale = [UIScreen mainScreen].scale;
+        
     }
     return self;
+}
+
+- (void)displayDidRefresh:(CADisplayLink *)link {
+    
+    if (!self.animated || self.pause) {
+        return; //stop any running animated
+    }
+    
+    if (self.iterationCount >= self.loopCount && self.loopCount > 0) {
+        return;
+    }
+    
+    if (self.index > 0 && self.image.hasAlpha) {
+        UIGraphicsBeginImageContextWithOptions(self.bounds.size, NO, 0.0);
+        [self drawViewHierarchyInRect:self.bounds afterScreenUpdates:NO];
+        UIImage * img = UIGraphicsGetImageFromCurrentImageContext();
+        UIGraphicsEndImageContext();
+        self.prevImg = img;
+    }
+    
+    if (self.index >= self.image.frames.count) {
+        self.index = 0;
+        self.prevImg = nil;
+        self.iterationCount++;
+        if (self.didFinishAnimation) {
+            self.didFinishAnimation(self.iterationCount);
+        }
+        
+        if (self.iterationCount >= self.loopCount && self.loopCount > 0) {
+            self.index = self.image.frames.count-1;
+            return;
+        }
+    }
+    [self.layer setNeedsDisplay];
+    
+    self.moveIndex = YES;
 }
 
 - (void)setBackgroundColor:(UIColor *)backgroundColor {
@@ -88,7 +130,7 @@
         [manager cancelImageForSession:self.urlSessionId url:_url];
     }
     _url = url;
-
+    
     self.loadingView.hidden = NO;
     [self.loadingView setProgress:0];
     __weak typeof(self) weakSelf = self;
@@ -103,25 +145,34 @@
     }];
 }
 
+- (NSInteger)frameInterval:(NSInteger)displayDuration {
+    return displayDuration*60/1000*2;
+}
+
 - (void)startDisplay {
+    
     self.loadingView.hidden = YES;
     self.animated = NO;
     self.prevImg = nil;
     self.index = 0;
     self.iterationCount = 0;
-    [self newContext];
     [self invalidateIntrinsicContentSize];
     [self setNeedsLayout];
+    
     if (self.image.frames.count > 1) {
+        
+        WebPFrame *frame = self.image.frames[self.index];
+        self.displayLink.frameInterval = [self frameInterval:frame.displayDuration];
         self.animated = YES;
-        [self doAnimation:self.image.frames[self.index]];
+        self.pause = NO;
     }
-    [self setNeedsDisplay];
+    [self.layer setNeedsDisplay];
+    
 }
 
 - (CGSize)intrinsicContentSize {
     if (self) {
-      return self.image.size;
+        return self.image.size;
     }
     return CGSizeZero;
 }
@@ -133,47 +184,6 @@
         [str appendFormat:@"%c",[letters characterAtIndex:arc4random() % 14]];
     }
     self.context = [NSString stringWithFormat:@"%@",str];
-}
-
--(void)doAnimation:(WebPFrame*)frame {
-    if (!self.animated || self.pause) {
-        return; //stop any running animated
-    }
-    if (self.iterationCount >= self.loopCount && self.loopCount > 0) {
-        return;
-    }
-    NSString *ctx = [self.context copy];
-    __weak typeof(self) weakSelf = self;
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, frame.displayDuration * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
-        if (weakSelf.index > 0 && weakSelf.image.hasAlpha) {
-            UIGraphicsBeginImageContextWithOptions(weakSelf.bounds.size, NO, 0.0);
-            [weakSelf drawViewHierarchyInRect:weakSelf.bounds afterScreenUpdates:NO];
-            UIImage * img = UIGraphicsGetImageFromCurrentImageContext();
-            UIGraphicsEndImageContext();
-            weakSelf.prevImg = img;
-        }
-        
-        if (weakSelf.index >= weakSelf.image.frames.count) {
-            weakSelf.index = 0;
-            weakSelf.prevImg = nil;
-            weakSelf.iterationCount++;
-            if (weakSelf.didFinishAnimation) {
-                weakSelf.didFinishAnimation(weakSelf.iterationCount);
-            }
-            if (weakSelf.iterationCount >= weakSelf.loopCount && weakSelf.loopCount > 0) {
-                weakSelf.index = weakSelf.image.frames.count-1;
-                return;
-            }
-        }
-        if (weakSelf.pause) {
-            return;
-        }
-        [weakSelf setNeedsDisplay];
-        weakSelf.moveIndex = YES;
-        if([ctx isEqualToString:weakSelf.context]) {
-            [weakSelf doAnimation:weakSelf.image.frames[weakSelf.index]];
-        }
-    });
 }
 
 -(void)layoutSubviews {
@@ -209,13 +219,14 @@
         if (y < 0) {
             y = 0;
         }
+        
         self.offsetOrigin = CGPointMake(x, y);
     }
 }
 
 - (void)setAspectScale:(CGFloat)aspectScale {
     if (_aspectScale != aspectScale && !self.animated) {
-        [self setNeedsDisplay];
+        [self.layer setNeedsDisplay];
     }
     _aspectScale = aspectScale;
 }
@@ -226,22 +237,28 @@
         if (self.index >= self.image.frames.count) {
             self.index = self.image.frames.count-1;
         }
-        if(self.image.frames.count > 0) {
-            [self newContext];
-            [self doAnimation:self.image.frames[self.index]];
-        }
     }
+    self.displayLink.paused = pause;
 }
 
-- (void)drawRect:(CGRect)rect {
+- (CGFloat)aspect {
+    return self.aspectScale;
+}
+
+- (void)drawLayer:(CALayer *)layer inContext:(CGContextRef)ctx {
+    
     if (self.image.frames.count == 0) {
-        return; //nothing to draw so don't even try
+        return;
     }
-    CGContextRef ctx = UIGraphicsGetCurrentContext();
-    [self.backgroundColor setFill];
+    
+    CGContextSetFillColorWithColor(ctx, self.backgroundColor.CGColor);
+    
     if (self.prevImg) {
+        UIGraphicsPushContext(ctx);
         [self.prevImg drawInRect:self.bounds];
+        UIGraphicsPopContext();
     }
+    
     if (self.index > 0 && self.index < self.image.frames.count) {
         WebPFrame *prevFrame = self.image.frames[self.index-1];
         if (prevFrame.dispose) {
@@ -255,7 +272,8 @@
             }
         }
     }
-    if(self.index > -1 && self.index < self.image.frames.count) {
+    
+    if(self.index > -1 && self.index < _image.frames.count) {
         WebPFrame *frame = self.image.frames[self.index];
         CGRect imgFrame = CGRectMake(self.offsetOrigin.x + (frame.frame.origin.x/self.aspectScale),
                                      self.offsetOrigin.y + (frame.frame.origin.y/self.aspectScale),
@@ -267,7 +285,11 @@
                 CGContextFillRect(ctx, imgFrame);
             }
         }
+        
+        UIGraphicsPushContext(ctx);
         [frame.image drawInRect:imgFrame];
+        UIGraphicsPopContext();
+        
         if (self.moveIndex) {
             self.index++;
             self.moveIndex = NO;
@@ -275,8 +297,8 @@
     }
 }
 
-- (CGFloat)aspect {
-    return self.aspectScale;
+- (void)dealloc {
+  [self.displayLink removeFromRunLoop:[NSRunLoop mainRunLoop] forMode:NSDefaultRunLoopMode];
 }
 
 @end
