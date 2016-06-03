@@ -74,18 +74,32 @@
 }
 
 - (void)setUrl:(NSURL *)url {
+    __weak typeof(self) weakSelf = self;
+    [self setUrl:url progress:^(CGFloat progress) {
+        [weakSelf.loadingView setProgress:progress];
+    } finished:^(WebPImage *img) {
+        weakSelf.image = img;
+    }];
+}
+
+- (void)setUrl:(NSURL*)url progress:(WebPImageProgress)progress finished:(WebPImageFinished)finished {
     WebPImageManager *manager = [WebPImageManager sharedManager];
     if (_url) {
         [manager cancelImageForSession:self.urlSessionId url:_url];
     }
     _url = url;
+
     self.loadingView.hidden = NO;
     [self.loadingView setProgress:0];
     __weak typeof(self) weakSelf = self;
-    self.urlSessionId = [manager imageForUrl:url progress:^(CGFloat pro) {
-        [weakSelf.loadingView setProgress:pro];
+    self.urlSessionId = [manager imageForUrl:url progress:^(CGFloat imageProgress) {
+        if (progress) {
+            progress(imageProgress);
+        }
     } finished:^(WebPImage *img) {
-        weakSelf.image = img;
+        if (finished) {
+            finished(img);
+        }
     }];
 }
 
