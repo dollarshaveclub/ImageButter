@@ -12,6 +12,8 @@
 @interface WebPImageView : UIView
 
 typedef void (^WebPAnimationFinished)(NSInteger);
+typedef void (^WebPImageFinished)(WebPImage*);
+typedef void (^WebPImageProgress)(CGFloat);
 
 /**
  Set the image to display.

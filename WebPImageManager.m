@@ -17,8 +17,11 @@ typedef void (^WebPDataFinished)(NSData*);
 @interface WebPNetworkImage : NSObject
 
 @property(nonatomic)NSMutableData *data;
-@property(nonatomic,strong)WebPDataFinished finished;
-@property(nonatomic,strong)WebPImageProgress progress;
+@property(nonatomic)WebPDataFinished finished;
+@property(nonatomic)WebPImageProgress progress;
+//preload
+@property(nonatomic)WebPPreloadFinished preloadFinished;
+@property(nonatomic, copy)NSString *urlHash;
 
 @end
 
@@ -30,6 +33,14 @@ typedef void (^WebPDataFinished)(NSData*);
         self.data = [[NSMutableData alloc] init];
         self.finished = finish;
         self.progress = progress;
+    }
+    return self;
+}
+
+- (instancetype)initWithPreload:(WebPPreloadFinished)finish hash:(NSString*)hash {
+    if (self = [super init]) {
+        self.preloadFinished = finish;
+        self.urlHash = hash;
     }
     return self;
 }
@@ -63,19 +74,19 @@ typedef void (^WebPDataFinished)(NSData*);
 
 #pragma mark - WebPImageManager
 
-@interface WebPImageManager ()<NSURLSessionDelegate>
+@interface WebPImageManager ()<NSURLSessionDelegate, NSURLSessionTaskDelegate>
 
 //the in-memory cache
 @property(nonatomic)NSCache *cache;
 
 //shared network session
-@property(nonatomic,strong)NSURLSession *mainSession;
+@property(nonatomic)NSURLSession *mainSession;
 
 //network session mapping
-@property(nonatomic,strong)NSMutableDictionary *networkDict;
+@property(nonatomic)NSMutableDictionary *networkDict;
 
 //block mappings of running sessions
-@property(nonatomic,strong)NSMutableDictionary *sessions;
+@property(nonatomic)NSMutableDictionary *sessions;
 
 @end
 
@@ -132,8 +143,8 @@ typedef void (^WebPDataFinished)(NSData*);
         }
         return sessionId;
     }
-    [self dataFromCache:hash finished:^(NSData* data){
-        if (data.length > 0) {
+    [self dataFromCache:hash finished:^(NSData* data) {
+        if (data.length > 0 && [WebPImage isValidImage:data]) {
             [self finishData:data hash:hash startProgress:0];
         } else {
             [self dataFromNetwork:url progress:^(CGFloat pro) {
@@ -148,7 +159,7 @@ typedef void (^WebPDataFinished)(NSData*);
             } finished:^(NSData *data) {
                 if (data.length > 0 && [WebPImage isValidImage:data]) {
                     NSString *cachePath = [[self cacheDirectory] stringByAppendingPathComponent:hash];
-                    [data writeToFile:cachePath atomically:NO]; 
+                    [data writeToFile:cachePath atomically:NO];
                     [self finishData:data hash:hash startProgress:0.5];
                 } else {
                     [self completeBlocks:nil hash:hash];
@@ -173,6 +184,55 @@ typedef void (^WebPDataFinished)(NSData*);
 - (WebPImage*)imageFromCache:(NSURL*)url {
     NSString *hash = [self hashForUrl:url];
     return [self.cache objectForKey:hash];
+}
+
+- (void)preloadImage:(NSURL*)url finished:(WebPPreloadFinished)finished {
+    if(!url || [url isFileURL]) {
+        return;
+    }
+    NSString *hash = [self hashForUrl:url];
+    if ([self.cache objectForKey:hash]) {
+        if (finished) {
+            finished(true);
+        }
+        return;
+    }
+    //might already be a real request running for it
+    NSInteger sessionId = arc4random_uniform(10000) + 1;
+    BOOL status = [self mapCheck:hash session:sessionId progress:nil finished:^(WebPImage *img) {
+        if (finished) {
+            BOOL success = (img != nil);
+            finished(success);
+        }
+    }];
+    if (status) {
+        return;
+    }
+    //now check on disk
+    NSString *cachePath = [[self cacheDirectory] stringByAppendingPathComponent:hash];
+    NSFileManager *manager = [NSFileManager defaultManager];
+    if ([manager fileExistsAtPath:cachePath]) {
+        [self completeBlocks:nil hash:hash];
+        if (finished) {
+            finished(true);
+        }
+    }
+    //now go fetch it
+    [self preloadFromNetwork:url hash:hash finished:^(BOOL status) {
+        NSArray *array = self.sessions[hash];
+        if (array.count > 1) {
+            [self dataFromCache:hash finished:^(NSData* data) {
+                if (data.length > 0 && [WebPImage isValidImage:data]) {
+                    [self finishData:data hash:hash startProgress:0];
+                }
+            }];
+        } else {
+            [self completeBlocks:nil hash:hash];
+        }
+        if (finished) {
+            finished(status);
+        }
+    }];
 }
 
 - (void)clearCache {
@@ -233,7 +293,7 @@ typedef void (^WebPDataFinished)(NSData*);
         progressScale = 1;
         startProgress = 0;
     }
-    WebPImage *img = [[WebPImage alloc] initWithData:data async:^(WebPImage* img){
+    WebPImage *img = [[WebPImage alloc] initWithData:data async:^(WebPImage* img) {
         [self completeBlocks:img hash:hash];
     }];
     [self.cache setObject:img forKey:hash];
@@ -264,7 +324,7 @@ typedef void (^WebPDataFinished)(NSData*);
     if ([[value substringFromIndex:[value length]-1] isEqualToString:@"/"]) {
         value = [value substringToIndex:[value length]-1];
     }
-
+    
     const char *cStr = [value UTF8String];
     unsigned char result[16];
     CC_MD5(cStr, (CC_LONG)strlen(cStr), result);
@@ -322,6 +382,12 @@ typedef void (^WebPDataFinished)(NSData*);
     [task resume];
 }
 
+- (void)preloadFromNetwork:(NSURL*)url hash:(NSString*)hash finished:(WebPPreloadFinished)finished {
+    NSURLSessionDownloadTask *task = [self.mainSession downloadTaskWithURL:url];
+    self.networkDict[@(task.taskIdentifier)] = [[WebPNetworkImage alloc] initWithPreload:finished hash:hash];
+    [task resume];
+}
+
 #pragma mark - NSURLSession delegate methods
 
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task
@@ -344,6 +410,25 @@ didCompleteWithError:(NSError *)error {
         CGFloat scale = 1/(CGFloat)task.response.expectedContentLength;
         netImage.progress(scale*netImage.data.length);
     }
+}
+
+- (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask
+didFinishDownloadingToURL:(NSURL *)location {
+    NSNumber *taskId = @(downloadTask.taskIdentifier);
+    WebPNetworkImage *netImage = self.networkDict[taskId];
+    if (netImage && netImage.urlHash) {
+        NSString *cachePath = [[self cacheDirectory] stringByAppendingPathComponent:netImage.urlHash];
+        NSURL *cacheURL = [NSURL fileURLWithPath:cachePath];
+        NSFileManager *manager = [NSFileManager defaultManager];
+        [manager removeItemAtURL:cacheURL error:nil];
+        BOOL status = [manager copyItemAtURL:location toURL:cacheURL error:nil];
+        if (netImage.preloadFinished) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                netImage.preloadFinished(status);
+            });
+        }
+    }
+    [self.networkDict removeObjectForKey:taskId];
 }
 
 @end

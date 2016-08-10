@@ -91,7 +91,6 @@
 
     self.loadingView.hidden = NO;
     [self.loadingView setProgress:0];
-    __weak typeof(self) weakSelf = self;
     self.urlSessionId = [manager imageForUrl:url progress:^(CGFloat imageProgress) {
         if (progress) {
             progress(imageProgress);
