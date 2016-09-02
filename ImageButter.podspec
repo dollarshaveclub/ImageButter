@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = "ImageButter"
-  s.version      = "1.0.2"
+  s.version      = "1.0.3"
   s.summary      = "Image viewer for iOS. Supports static and animated WebP, animated GIF, and standard iOS formats."
   s.homepage     = "https://github.com/dollarshaveclub/ImageButter"
   s.source       = { :git => "https://github.com/dollarshaveclub/ImageButter.git", :tag => "#{s.version}" }

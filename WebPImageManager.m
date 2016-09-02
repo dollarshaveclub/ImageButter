@@ -143,13 +143,14 @@ typedef void (^WebPDataFinished)(NSData*);
         }
         return sessionId;
     }
+    __weak typeof(self) weakSelf = self;
     [self dataFromCache:hash finished:^(NSData* data) {
         if (data.length > 0 && [WebPImage isValidImage:data]) {
-            [self finishData:data hash:hash startProgress:0];
+            [weakSelf finishData:data hash:hash startProgress:0];
         } else {
-            [self dataFromNetwork:url progress:^(CGFloat pro) {
+            [weakSelf dataFromNetwork:url progress:^(CGFloat pro) {
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    NSArray *array = self.sessions[hash];
+                    NSArray *array = weakSelf.sessions[hash];
                     for(WebPSessionHolder *holder in array) {
                         if (holder.progress) {
                             holder.progress(pro/2);
@@ -158,11 +159,11 @@ typedef void (^WebPDataFinished)(NSData*);
                 });
             } finished:^(NSData *data) {
                 if (data.length > 0 && [WebPImage isValidImage:data]) {
-                    NSString *cachePath = [[self cacheDirectory] stringByAppendingPathComponent:hash];
+                    NSString *cachePath = [[weakSelf cacheDirectory] stringByAppendingPathComponent:hash];
                     [data writeToFile:cachePath atomically:NO];
-                    [self finishData:data hash:hash startProgress:0.5];
+                    [weakSelf finishData:data hash:hash startProgress:0.5];
                 } else {
-                    [self completeBlocks:nil hash:hash];
+                    [weakSelf completeBlocks:nil hash:hash];
                 }
             }];
         }
@@ -218,16 +219,17 @@ typedef void (^WebPDataFinished)(NSData*);
         }
     }
     //now go fetch it
+    __weak typeof(self) weakSelf = self;
     [self preloadFromNetwork:url hash:hash finished:^(BOOL status) {
-        NSArray *array = self.sessions[hash];
+        NSArray *array = weakSelf.sessions[hash];
         if (array.count > 1) {
-            [self dataFromCache:hash finished:^(NSData* data) {
+            [weakSelf dataFromCache:hash finished:^(NSData* data) {
                 if (data.length > 0 && [WebPImage isValidImage:data]) {
-                    [self finishData:data hash:hash startProgress:0];
+                    [weakSelf finishData:data hash:hash startProgress:0];
                 }
             }];
         } else {
-            [self completeBlocks:nil hash:hash];
+            [weakSelf completeBlocks:nil hash:hash];
         }
         if (finished) {
             finished(status);
@@ -293,13 +295,14 @@ typedef void (^WebPDataFinished)(NSData*);
         progressScale = 1;
         startProgress = 0;
     }
+    __weak typeof(self) weakSelf = self;
     WebPImage *img = [[WebPImage alloc] initWithData:data async:^(WebPImage* img) {
-        [self completeBlocks:img hash:hash];
+        [weakSelf completeBlocks:img hash:hash];
     }];
     [self.cache setObject:img forKey:hash];
     img.decodeProgress = ^(CGFloat pro) {
         CGFloat overallProgress = startProgress + pro/progressScale;
-        NSArray *array = self.sessions[hash];
+        NSArray *array = weakSelf.sessions[hash];
         for(WebPSessionHolder *holder in array) {
             if (holder.progress) {
                 holder.progress(overallProgress);
