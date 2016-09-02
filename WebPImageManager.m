@@ -222,10 +222,12 @@ typedef void (^WebPDataFinished)(NSData*);
     __weak typeof(self) weakSelf = self;
     [self preloadFromNetwork:url hash:hash finished:^(BOOL status) {
         NSArray *array = weakSelf.sessions[hash];
-        if (array.count > 1) {
+        if (array.count > 1 && status) {
             [weakSelf dataFromCache:hash finished:^(NSData* data) {
                 if (data.length > 0 && [WebPImage isValidImage:data]) {
                     [weakSelf finishData:data hash:hash startProgress:0];
+                } else {
+                    [weakSelf completeBlocks:nil hash:hash];
                 }
             }];
         } else {
@@ -400,6 +402,11 @@ didCompleteWithError:(NSError *)error {
     if (netImage.finished) {
         dispatch_async(dispatch_get_main_queue(), ^{
             netImage.finished(netImage.data);
+        });
+    }
+    if (netImage.preloadFinished) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            netImage.preloadFinished(false);
         });
     }
     [self.networkDict removeObjectForKey:taskId];
