@@ -88,7 +88,7 @@
         [manager cancelImageForSession:self.urlSessionId url:_url];
     }
     _url = url;
-
+    
     self.loadingView.hidden = NO;
     [self.loadingView setProgress:0];
     self.urlSessionId = [manager imageForUrl:url progress:^(CGFloat imageProgress) {
@@ -120,7 +120,7 @@
 
 - (CGSize)intrinsicContentSize {
     if (self) {
-      return self.image.size;
+        return self.image.size;
     }
     return CGSizeZero;
 }
@@ -183,9 +183,10 @@
     CGFloat width = self.image.size.width;
     CGFloat height = self.image.size.height;
     if (width > 0 && height > 0) {
+        BOOL isCenter = (self.contentMode == UIViewContentModeCenter);
         BOOL isGreaterWidth = (width > self.bounds.size.width);
         BOOL isGreaterHeight = (height > self.bounds.size.height);
-        if (isGreaterWidth || isGreaterHeight) {
+        if ((isGreaterWidth || isGreaterHeight) && !isCenter) {
             CGFloat hScale = height/self.bounds.size.height;
             CGFloat wScale = width/self.bounds.size.width;
             if (wScale > hScale && isGreaterWidth) {
@@ -202,10 +203,10 @@
         }
         CGFloat x = (self.bounds.size.width - width)/2;
         CGFloat y = (self.bounds.size.height - height)/2;
-        if (x < 0) {
+        if (x < 0 && !isCenter) {
             x = 0;
         }
-        if (y < 0) {
+        if (y < 0 && !isCenter) {
             y = 0;
         }
         self.offsetOrigin = CGPointMake(x, y);
