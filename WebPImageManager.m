@@ -406,7 +406,7 @@ didCompleteWithError:(NSError *)error {
     }
     if (netImage.preloadFinished) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            netImage.preloadFinished(false);
+            netImage.preloadFinished(NO);
         });
     }
     [self.networkDict removeObjectForKey:taskId];
